@@ -41,6 +41,11 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
 .cg button{border:0;background:none;color:var(--fg);height:42px;border-radius:50%;font-size:15px;position:relative}
 .cg button.has{color:#d6579a}.cg button.has::after{content:"♥";position:absolute;left:0;right:0;bottom:-3px;font-size:9px;color:#ff8fb8}
 .cg button.sel{background:linear-gradient(135deg,#ff9ec4,#b69cff);color:#fff}.cg button.sel::after{color:#fff}.cg button:disabled{opacity:.3}
+.tg{position:absolute;top:0;bottom:0;width:2px}.tg span{position:absolute;top:3px;left:3px;font-size:11px;color:#fff;padding:1px 7px;border-radius:9px;white-space:nowrap}
+#tags{position:absolute;inset:0;pointer-events:none}
+#ph{position:absolute;top:0;bottom:0;width:2px;background:#5b3fd6;pointer-events:none;z-index:2;box-shadow:0 0 6px rgba(91,63,214,.6)}
+#tw{position:relative;overflow-x:auto;border-radius:20px;background:#fff7fc;border:1.5px solid #f3e1f5;-webkit-overflow-scrolling:touch}
+#tl{position:relative;cursor:pointer}
 </style></head><body>
 <h1>🎸 Castle 화요일밴드 🥁</h1>
 <div class="sub">우리 합주 다시 듣기 ♪</div>
@@ -66,8 +71,17 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
         <div class="mut">끊긴 곡 붙이기 간격(초) <b id="mgapv">3</b></div><input type="range" id="mgap" min="0" max="15" value="3">
         <div class="mut">최소 곡 길이(초) <b id="minlv">60</b></div><input type="range" id="minl" min="20" max="180" value="60">
       </details>
-      <button class="btn" id="go" disabled>분석 시작</button>
+      <div class="rw" style="flex-wrap:nowrap"><button class="btn" id="go" disabled style="flex:1">🤖 자동 추출</button><button class="btn" id="mn" disabled style="flex:1">✋ 수동 추출</button></div>
       <div class="mut" id="st"></div>
+      <div id="man" hidden>
+        <div class="mut" style="margin:8px 2px">파형을 옆으로 밀면서 듣다가 곡이 시작·끝나는 곳에 태그를 붙이세요. 파형을 누르면 그 위치로 이동해요. 다 붙인 뒤 ✂️ 자르기!</div>
+        <div id="tw"><div id="tl"><canvas id="cv" height="130" style="display:block"></canvas><div id="tags"></div><div id="ph"></div></div></div>
+        <div class="rw" style="justify-content:space-between"><b id="now">0:00.0</b><button class="gh sm" id="mp">▶ 재생</button><button class="gh sm" id="mr">⏩ 1×</button></div>
+        <div class="rw" id="mv"></div>
+        <div class="rw" style="flex-wrap:nowrap"><button class="btn" id="ts" style="flex:1">🟢 곡 시작 태그</button><button class="btn" id="te" style="flex:1">🔴 곡 끝 태그</button></div>
+        <div class="rw" id="tc"></div>
+        <button class="btn" id="cut">✂️ 자르기</button>
+      </div>
     </div>
     <div id="sg"></div>
     <h3 style="margin:18px 4px 8px">2. 올라간 곡 관리</h3>
@@ -215,29 +229,93 @@ let file,url,mono,E,H,dur=0,segs=[];
 const ad=$('#ad');
 $('#f').onchange=e=>{
   file=e.target.files[0];if(!file)return;mono=null;
-  if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);ad.src=url;$('#go').disabled=false;
+  if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);ad.src=url;$('#go').disabled=false;$('#mn').disabled=false;$('#man').hidden=true;tags=[];
 };
 const st=t=>$('#st').textContent=t;
+async function prep(){
+  if(mono)return;
+  st('디코딩 중… (1시간 파일은 1~2분 걸려요)');await wait();
+  const ctx=new AudioContext({sampleRate:SR});
+  const buf=await ctx.decodeAudioData(await file.arrayBuffer());
+  const n=buf.length,c=buf.numberOfChannels;mono=new Float32Array(n);
+  for(let ch=0;ch<c;ch++){const d=buf.getChannelData(ch);for(let i=0;i<n;i++)mono[i]+=d[i]/c}
+  ctx.close();dur=n/SR;
+  st('소리 특징 계산 중…');await wait();
+  const nf=Math.floor(n/F);E=new Float32Array(nf);H=new Float32Array(nf);
+  for(let i=0;i<nf;i++){let e=0,h=0,o=i*F,p=mono[o];
+    for(let j=1;j<F;j++){const x=mono[o+j];e+=x*x;const d=x-p;h+=d*d;p=x}
+    E[i]=e/F;H[i]=h/F}
+}
+const busy=v=>['#go','#mn'].forEach(k=>$(k).disabled=v);
 $('#go').onclick=async()=>{
-  $('#go').disabled=true;
-  try{
-    if(!mono){
-      st('디코딩 중… (1시간 파일은 1~2분 걸려요)');await wait();
-      const ctx=new AudioContext({sampleRate:SR});
-      const buf=await ctx.decodeAudioData(await file.arrayBuffer());
-      const n=buf.length,c=buf.numberOfChannels;mono=new Float32Array(n);
-      for(let ch=0;ch<c;ch++){const d=buf.getChannelData(ch);for(let i=0;i<n;i++)mono[i]+=d[i]/c}
-      ctx.close();dur=n/SR;
-      st('소리 특징 계산 중…');await wait();
-      const nf=Math.floor(n/F);E=new Float32Array(nf);H=new Float32Array(nf);
-      for(let i=0;i<nf;i++){let e=0,h=0,o=i*F,p=mono[o];
-        for(let j=1;j<F;j++){const x=mono[o+j];e+=x*x;const d=x-p;h+=d*d;p=x}
-        E[i]=e/F;H[i]=h/F}
-    }
-    find();
-  }catch(err){st('오류: '+err.message)}
-  $('#go').disabled=false;$('#go').textContent='설정 바꿔 다시 찾기';
+  busy(true);$('#man').hidden=true;
+  try{await prep();find()}catch(err){st('오류: '+err.message)}
+  busy(false);$('#go').textContent='🤖 다시 자동 추출';
 };
+$('#mn').onclick=async()=>{
+  busy(true);
+  try{await prep();segs=[];renderS();showManual()}catch(err){st('오류: '+err.message)}
+  busy(false);
+};
+
+/* ✋ 수동 추출: 긴 파형 + 태그 */
+let pxs=2,pk=null,tags=[],rate=1,lastUser=0,fol=false,looping=false;
+function showManual(){
+  $('#man').hidden=false;
+  pxs=Math.min(4,14000/dur);const W=Math.floor(dur*pxs),cv=$('#cv');cv.width=W;
+  const per=SR/pxs;pk=new Float32Array(W);
+  for(let w=0;w<W;w++){let m=0;for(let i=Math.floor(w*per),e=Math.min(mono.length,Math.floor((w+1)*per));i<e;i+=3){const a=Math.abs(mono[i]);if(a>m)m=a}pk[w]=m}
+  const ref=[...pk].sort((a,b)=>a-b)[Math.floor(W*.97)]||1;
+  const g=cv.getContext('2d'),H=cv.height;g.clearRect(0,0,W,H);g.fillStyle='#c9b6f7';
+  for(let w=0;w<W;w++){const h=Math.min(1,pk[w]/ref)*(H-34)/2;g.fillRect(w,(H-18)/2-h,1,Math.max(1,h*2))}
+  g.fillStyle='#a095b8';g.font='11px sans-serif';
+  for(let t=0,step=pxs>=2?60:300;t<dur;t+=step){g.fillRect(t*pxs,H-18,1,6);g.fillText(Math.floor(t/60)+'분',t*pxs+3,H-4)}
+  tags=[];renderTags();
+  $('#mv').innerHTML=[-30,-10,-5,-1,1,5,10,30].map(d=>`<button class="gh sm" data-d="${d}">${d>0?'+':'−'}${Math.abs(d)}초</button>`).join('');
+  st('파형을 밀면서 듣고, 곡 시작·끝에 태그를 붙인 뒤 ✂️ 자르기를 누르세요.');
+  if(!looping){looping=true;loop()}
+}
+function loop(){
+  if($('#man').hidden){looping=false;return}
+  const t=ad.currentTime,x=t*pxs,w=$('#tw');
+  $('#ph').style.left=x+'px';$('#now').textContent=fmtd(t);
+  const out=x>w.scrollLeft+w.clientWidth*.85||x<w.scrollLeft;
+  if(out&&(fol||(!ad.paused&&Date.now()-lastUser>2500)))w.scrollLeft=x-w.clientWidth*.3;
+  fol=false;requestAnimationFrame(loop);
+}
+['wheel','touchmove','pointerdown'].forEach(k=>$('#tw').addEventListener(k,()=>lastUser=Date.now(),{passive:true}));
+function labels(){
+  let n=0,open=false;
+  return [...tags].sort((a,b)=>a.t-b.t).map(x=>{
+    if(x.k==='s'){n++;open=true;return{...x,l:n+'곡 시작'}}
+    const l=open?n+'곡 끝':'끝?';open=false;return{...x,l}});
+}
+function renderTags(){
+  const L=labels();
+  $('#tags').innerHTML=L.map(x=>{const c=x.k==='s'?'#34c98f':'#ff6b8b';return`<div class="tg" style="left:${x.t*pxs}px;background:${c}"><span style="background:${c}">${x.l}</span></div>`}).join('');
+  $('#tc').innerHTML=L.map(x=>`<span style="white-space:nowrap"><button class="gh sm" data-t="${x.t}">${x.l} ${fmtd(x.t)}</button><button class="gh sm" data-x="${x.id}">✕</button></span>`).join('');
+}
+const addTag=k=>{tags.push({id:Math.random().toString(36).slice(2),t:ad.currentTime,k});renderTags()};
+$('#ts').onclick=()=>addTag('s');$('#te').onclick=()=>addTag('e');
+$('#tc').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.x){tags=tags.filter(x=>x.id!==b.dataset.x);renderTags()}
+  else if(b.dataset.t){ad.currentTime=+b.dataset.t;fol=true}};
+$('#mv').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  ad.currentTime=Math.max(0,Math.min(dur,ad.currentTime+(+b.dataset.d)));fol=true};
+$('#tl').onclick=e=>{const r=$('#cv').getBoundingClientRect();ad.currentTime=Math.max(0,Math.min(dur,(e.clientX-r.left)/pxs))};
+$('#mp').onclick=()=>{act=null;stopAt=null;ad.paused?ad.play():ad.pause()};
+ad.addEventListener('play',()=>$('#mp').textContent='⏸ 일시정지');
+ad.addEventListener('pause',()=>$('#mp').textContent='▶ 재생');
+$('#mr').onclick=()=>{rate=rate===1?2:rate===2?4:1;ad.playbackRate=rate;$('#mr').textContent='⏩ '+rate+'×'};
+$('#cut').onclick=()=>{
+  const out=[];let o=null;
+  labels().forEach(x=>{if(x.k==='s')o=x.t;else if(o!==null&&x.t>o){out.push({s:o,e:x.t});o=null}});
+  if(!out.length)return alert('곡 시작·곡 끝 태그를 짝으로 붙여 주세요');
+  segs=out.map((r,i)=>({...r,name:'곡 '+(i+1)+'번'}));renderS();
+  st(`곡 ${segs.length}개를 잘랐어요. 아래에서 들어보고 시작·끝을 세밀하게 조정한 뒤 올리세요.`);
+  $('#sg').scrollIntoView({behavior:'smooth'});
+};
+
 function find(){
   const thr=+$('#thr').value,drop=+$('#drop').value,hold=+$('#hold').value,preDb=+$('#pre').value,mgap=+$('#mgap').value,minL=+$('#minl').value;
   const nf=E.length,h=new Float32Array(nf),O=new Float32Array(nf);
@@ -290,7 +368,7 @@ function renderS(){
     <div class="rw"><button class="gh sm" data-a="pp">▶ 재생</button><button class="gh sm" data-a="hs">시작부</button><button class="gh sm" data-a="he">끝부</button><button class="gh sm" data-a="ss">여기부터 시작</button><button class="gh sm" data-a="se">여기까지 끝</button><button class="gh sm" data-a="sp">여기서 나누기</button>${i<segs.length-1?'<button class="gh sm" data-a="mg">다음 곡과 합치기</button>':''}<button class="gh sm" data-a="rm">제외</button></div>
     <button class="btn" data-a="pub">🎵 이 곡 올리기</button></div>`).join('');
 }
-function playFrom(i,from,to){act=i;stopAt=to;ad.currentTime=from;ad.play()}
+function playFrom(i,from,to){rate=1;ad.playbackRate=1;$('#mr').textContent='⏩ 1×';act=i;stopAt=to;ad.currentTime=from;ad.play()}
 ad.ontimeupdate=()=>{
   if(act===null||!segs[act])return;const s=segs[act],t=ad.currentTime;
   if(stopAt!==null&&t>=stopAt){ad.pause();return}
