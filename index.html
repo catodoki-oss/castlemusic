@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Castle 화요일밴드 합주실</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--fg:#4f3f66;--mut:#a095b8;--ac:#ff8fb8;--ln:#f1e4f7;--st:#ffb02e}
+*{box-sizing:border-box}html{color-scheme:light}
+body{margin:0;min-height:100vh;color:var(--fg);background:linear-gradient(160deg,#ffe3f0 0%,#ebe3ff 45%,#d8f0ff 100%) fixed;font:16px/1.45 "Jua",-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px calc(170px + env(safe-area-inset-bottom));max-width:640px;margin:auto}
+h1{font-size:32px;text-align:center;margin:8px 0 4px;background:linear-gradient(90deg,#ff7eb3,#a78bfa,#5cc2ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{text-align:center;color:var(--mut);margin:0 0 16px;font-size:14px}
+.seg{display:flex;background:rgba(255,255,255,.65);border-radius:999px;padding:4px;margin-bottom:16px;box-shadow:0 4px 14px rgba(167,139,250,.2)}
+.seg button{flex:1;border:0;background:none;color:var(--mut);padding:9px;border-radius:999px;font:inherit}
+.seg button.on{background:linear-gradient(90deg,#ff9ec4,#b69cff);color:#fff;box-shadow:0 3px 10px rgba(167,139,250,.45)}
+.card{background:rgba(255,255,255,.8);border-radius:26px;padding:6px 16px;margin-bottom:14px;box-shadow:0 6px 20px rgba(167,139,250,.16)}
+.pad{padding:14px 16px}.mut{color:var(--mut);font-size:13px}
+.row{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1.5px dashed var(--ln)}
+.row:first-child{border-top:0}.gr{flex:1;min-width:0}
+.rw{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+button{font:inherit;cursor:pointer}
+.btn{background:linear-gradient(90deg,#ff9ec4,#b69cff);color:#fff;border:0;border-radius:999px;padding:12px 18px;width:100%;margin:6px 0;box-shadow:0 5px 14px rgba(167,139,250,.4)}
+.btn:disabled{opacity:.6}
+.gh{background:#f5ecff;color:#8b6fe0;border:0;border-radius:999px;padding:8px 13px}
+.sm{font-size:13px;padding:6px 11px}
+.pl{width:38px;height:38px;border-radius:50%;border:0;background:linear-gradient(135deg,#ffb3d1,#b69cff);color:#fff;flex:none;box-shadow:0 3px 8px rgba(167,139,250,.4)}
+.star{border:0;background:none;color:#c9bfe0;font-size:15px}.star.on{color:var(--st)}
+input,select{font:inherit;background:#fff7fc;color:var(--fg);border:1.5px solid #f3e1f5;border-radius:14px;padding:9px 12px;max-width:100%}
+input[type=range]{width:100%;padding:0;background:none;border:0;accent-color:#b69cff}
+input[type=checkbox]{width:auto}.nm{width:100%}.tm{width:84px;text-align:center}
+.gr .nm{font-weight:600}
+#bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:616px;margin:auto;background:rgba(255,255,255,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:28px;padding:12px 16px;box-shadow:0 8px 28px rgba(167,139,250,.35)}
+#bar[hidden],[hidden]{display:none!important}
+.top{display:flex;align-items:center;gap:10px}.top b{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pp{width:44px;height:44px;border-radius:50%;border:0;background:linear-gradient(135deg,#ff9ec4,#b69cff);color:#fff;font-size:16px}
+.chips{display:flex;gap:6px;justify-content:space-between;align-items:center}
+summary{color:#8b6fe0;font-size:14px;margin:8px 0}
+.cal{padding:12px 12px 8px}.ch{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 8px;font-size:18px}
+.ch button{border:0;background:none;color:#b69cff;font-size:22px;padding:2px 12px}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cg .w{color:var(--mut);font-size:12px;padding:4px 0}
+.cg button{border:0;background:none;color:var(--fg);height:42px;border-radius:50%;font-size:15px;position:relative}
+.cg button.has{color:#d6579a}.cg button.has::after{content:"♥";position:absolute;left:0;right:0;bottom:-3px;font-size:9px;color:#ff8fb8}
+.cg button.sel{background:linear-gradient(135deg,#ff9ec4,#b69cff);color:#fff}.cg button.sel::after{color:#fff}.cg button:disabled{opacity:.3}
+</style></head><body>
+<h1>🎸 Castle 화요일밴드 🥁</h1>
+<div class="sub">우리 합주 다시 듣기 ♪</div>
+<div class="seg" id="tabs"><button class="on" data-t="U">🎧 듣기</button><button data-t="A">🎤 올리기</button></div>
+
+<section id="U">
+  <div class="card cal"><div class="ch"><button id="pm">‹</button><span id="mt"></span><button id="nx">›</button></div><div class="cg" id="cg"></div></div>
+  <div class="rw"><b id="dl" style="margin-left:4px"></b><button class="gh sm" id="stb" style="margin-left:auto">⭐ 보관곡 모음</button></div>
+  <div class="card" id="ul"></div>
+</section>
+
+<section id="A" hidden>
+  <div id="adm">
+    <div class="card pad">
+      <b>1. 녹음 분석하고 올리기</b>
+      <div class="rw"><input type="file" id="f" accept="audio/*,.m4a"></div>
+      <div class="rw"><span class="mut">합주 날짜</span><input type="date" id="dt"></div>
+      <details><summary>감지 설정</summary>
+        <div class="mut">카운트 감도(dB) <b id="thrv">12</b></div><input type="range" id="thr" min="6" max="25" value="12">
+        <div class="mut">끝 판정 음량 하락(dB) <b id="dropv">12</b></div><input type="range" id="drop" min="5" max="25" value="12">
+        <div class="mut">끝 판정 유지(초) <b id="holdv">4</b></div><input type="range" id="hold" min="2" max="10" value="4">
+        <div class="mut">카운트 직전 조용함(dB, 0=끄기) <b id="prev">5</b></div><input type="range" id="pre" min="0" max="15" value="5">
+        <div class="mut">끊긴 곡 붙이기 간격(초) <b id="mgapv">3</b></div><input type="range" id="mgap" min="0" max="15" value="3">
+        <div class="mut">최소 곡 길이(초) <b id="minlv">60</b></div><input type="range" id="minl" min="20" max="180" value="60">
+      </details>
+      <button class="btn" id="go" disabled>분석 시작</button>
+      <div class="mut" id="st"></div>
+    </div>
+    <div id="sg"></div>
+    <h3 style="margin:18px 4px 8px">2. 올라간 곡 관리</h3>
+    <div class="card" id="ml"></div>
+  </div>
+</section>
+
+<div id="bar" hidden>
+  <div class="top"><button class="pp" id="pp">▶</button><b id="bt"></b><span class="mut" id="tm"></span></div>
+  <input type="range" id="sl" min="0" max="1000" value="0" style="margin:8px 0 4px">
+  <div class="chips"><button class="gh sm" data-p="0">처음</button><button class="gh sm" data-p=".25">1/4</button><button class="gh sm" data-p=".5">중간</button><button class="gh sm" data-p=".75">3/4</button><button class="gh sm" data-p=".92">끝부분</button></div>
+</div>
+<audio id="au"></audio><audio id="ad"></audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import {getFirestore,collection,getDocs,addDoc,setDoc,updateDoc,deleteDoc,doc,increment} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+import {getStorage,ref,uploadBytesResumable,getDownloadURL,deleteObject} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-storage.js";
+
+const app=initializeApp({apiKey:"AIzaSyCnhmdsJqecjmBkWL1ImHlBmCdGZgY_Rak",authDomain:"castle2-b3eb6.firebaseapp.com",projectId:"castle2-b3eb6",storageBucket:"castle2-b3eb6.firebasestorage.app",messagingSenderId:"765106789953",appId:"1:765106789953:web:38b813500654e02407f0c0"});
+const db=getFirestore(app),sto=getStorage(app);
+sto.maxUploadRetryTime=30000;
+
+/* ★ 설정 */
+const STORE='fs';              // 'fs' = Firestore에 저장(무료·Storage 불필요), 'storage' = Firebase Storage
+const CAP_MB=800;              // 이 용량을 넘으면 별표 없는 오래된 곡부터 자동 삭제 (Storage 모드면 3000 정도)
+const PART=600000;             // Firestore 저장 시 조각 크기
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=t=>{t=Math.max(0,t||0);return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')};
+const fmtd=t=>{const m=Math.floor(t/60);return m+':'+(t-m*60).toFixed(1).padStart(4,'0')};
+const parse=s=>{const p=s.split(':');return p.length>1?(+p[0])*60+(+p[1]):+s};
+const wait=()=>new Promise(r=>setTimeout(r,15));
+let songs=[],cur=null,stars=new Set();
+try{stars=new Set(JSON.parse(localStorage.getItem('stars_tue')||'[]'))}catch(e){}
+
+/* 탭 */
+$('#tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#U').hidden=b.dataset.t!=='U';$('#A').hidden=b.dataset.t!=='A'};
+['thr','drop','hold','pre','mgap','minl'].forEach(k=>$('#'+k).oninput=e=>$('#'+k+'v').textContent=e.target.value);
+$('#dt').value=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+
+/* 데이터 */
+async function load(){
+  try{const q=await getDocs(collection(db,'songs'));songs=q.docs.map(d=>({id:d.id,...d.data()}))}
+  catch(e){$('#ul').innerHTML='<div class="pad mut">불러오기 실패: '+esc(e.message)+'</div>';return}
+  renderU();renderM();
+}
+async function delSong(s){
+  if(s.store==='fs'){const q=await getDocs(collection(db,'songs',s.id,'parts'));for(const d of q.docs)await deleteDoc(d.ref)}
+  else try{await deleteObject(ref(sto,s.path))}catch(e){}
+  await deleteDoc(doc(db,'songs',s.id));songs=songs.filter(x=>x.id!==s.id);
+}
+async function ensureSpace(need){
+  const cap=CAP_MB*1048576;let tot=songs.reduce((a,s)=>a+(s.size||0),0);
+  const old=songs.filter(s=>!(s.stars>0)).sort((a,b)=>(a.created||0)-(b.created||0));
+  while(tot+need>cap&&old.length){const s=old.shift();tot-=s.size||0;await delSong(s)}
+  if(tot+need>cap)throw new Error('용량 부족: 별표로 보관된 곡이 너무 많아요');
+}
+
+/* 이용자 화면 (달력) */
+let ym=new Date(),selD=null,starMode=false;
+const vis=()=>songs.filter(s=>s.visible!==false);
+function renderU(){
+  if(!selD||!vis().some(s=>s.date===selD)){const ds=vis().map(s=>s.date).sort();selD=ds[ds.length-1]||null;if(selD)ym=new Date(selD+'T00:00:00')}
+  drawCal();drawU();
+}
+function drawCal(){
+  const y=ym.getFullYear(),m=ym.getMonth(),has=new Set(vis().map(s=>s.date));
+  $('#mt').textContent=`${y}년 ${m+1}월`;
+  let h=['일','월','화','수','목','금','토'].map(d=>`<div class="w">${d}</div>`).join('');
+  for(let i=0,f=new Date(y,m,1).getDay();i<f;i++)h+='<div></div>';
+  for(let d=1,n=new Date(y,m+1,0).getDate();d<=n;d++){
+    const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    h+=`<button data-d="${k}" class="${has.has(k)?'has':''} ${k===selD&&!starMode?'sel':''}" ${has.has(k)?'':'disabled'}>${d}</button>`}
+  $('#cg').innerHTML=h;
+}
+function drawU(){
+  const l=vis().filter(s=>starMode?s.stars>0:s.date===selD).sort((a,b)=>(a.created||0)-(b.created||0));
+  $('#dl').textContent=starMode?'⭐ 보관곡 모음':(selD?selD.replace(/-/g,'.')+' 합주':'날짜를 선택하세요');
+  $('#stb').textContent=starMode?'달력으로':'⭐ 보관곡 모음';
+  $('#ul').innerHTML=l.length?l.map(s=>`<div class="row" data-id="${s.id}"><button class="pl">▶</button><div class="gr"><b>${esc(s.name)}</b><div class="mut">${fmt(s.dur)}${starMode?' · '+s.date:''}</div></div><button class="star ${stars.has(s.id)?'on':''}">${stars.has(s.id)?'★':'☆'} ${s.stars||0}</button></div>`).join(''):'<div class="pad mut">곡이 없어요</div>';
+}
+$('#pm').onclick=()=>{ym=new Date(ym.getFullYear(),ym.getMonth()-1,1);drawCal()};
+$('#nx').onclick=()=>{ym=new Date(ym.getFullYear(),ym.getMonth()+1,1);drawCal()};
+$('#cg').onclick=e=>{const b=e.target.closest('button[data-d]');if(!b)return;selD=b.dataset.d;starMode=false;drawCal();drawU()};
+$('#stb').onclick=()=>{starMode=!starMode;drawCal();drawU()};
+$('#ul').onclick=async e=>{
+  const r=e.target.closest('.row');if(!r)return;const s=songs.find(x=>x.id===r.dataset.id);if(!s)return;
+  if(e.target.closest('.star')){
+    const on=!stars.has(s.id);on?stars.add(s.id):stars.delete(s.id);
+    s.stars=Math.max(0,(s.stars||0)+(on?1:-1));
+    try{localStorage.setItem('stars_tue',JSON.stringify([...stars]))}catch(x){}
+    drawU();
+    try{await updateDoc(doc(db,'songs',s.id),{stars:increment(on?1:-1)})}catch(x){alert('별표 저장 실패')}
+    return}
+  play(s);
+};
+
+/* 플레이어 */
+const au=$('#au');
+const blobs={};
+async function play(s){
+  cur=s;$('#bt').textContent=s.name;$('#bar').hidden=false;
+  if(s.store==='fs'){
+    if(!blobs[s.id]){
+      $('#tm').textContent='불러오는 중…';
+      try{const q=await getDocs(collection(db,'songs',s.id,'parts'));
+        const ps=q.docs.map(d=>d.data()).sort((a,b)=>a.i-b.i).map(p=>Uint8Array.from(atob(p.d),c=>c.charCodeAt(0)));
+        blobs[s.id]=URL.createObjectURL(new Blob(ps,{type:'audio/mpeg'}))}
+      catch(e){$('#tm').textContent='불러오기 실패';return}
+    }
+    au.src=blobs[s.id];
+  }else au.src=s.url;
+  au.play();
+}
+au.ontimeupdate=()=>{if(!cur)return;$('#sl').value=au.currentTime/cur.dur*1000;$('#tm').textContent=fmt(au.currentTime)+' / '+fmt(cur.dur)};
+au.onplay=()=>$('#pp').textContent='⏸';au.onpause=()=>$('#pp').textContent='▶';
+$('#sl').oninput=e=>{if(cur)au.currentTime=e.target.value/1000*cur.dur};
+$('#pp').onclick=()=>au.paused?au.play():au.pause();
+$('#bar').querySelector('.chips').onclick=e=>{const b=e.target.closest('button');if(b&&cur)au.currentTime=+b.dataset.p*cur.dur};
+
+/* 관리자: 올라간 곡 관리 */
+function renderM(){
+  $('#ml').innerHTML=songs.length?[...songs].sort((a,b)=>(b.created||0)-(a.created||0)).map(s=>`<div class="row" data-id="${s.id}"><div class="gr"><input class="nm" value="${esc(s.name)}"><div class="mut">${s.date} · ${fmt(s.dur)} · ★${s.stars||0}</div></div><label class="mut"><input type="checkbox" class="vz" ${s.visible!==false?'checked':''}> 노출</label><button class="gh sm dl">삭제</button></div>`).join(''):'<div class="pad mut">아직 곡이 없어요</div>';
+}
+$('#ml').onchange=async e=>{
+  const r=e.target.closest('.row'),s=songs.find(x=>x.id===r.dataset.id);if(!s)return;
+  if(e.target.classList.contains('nm')){s.name=e.target.value;await updateDoc(doc(db,'songs',s.id),{name:s.name})}
+  if(e.target.classList.contains('vz')){s.visible=e.target.checked;await updateDoc(doc(db,'songs',s.id),{visible:s.visible})}
+  renderU();
+};
+$('#ml').onclick=async e=>{
+  if(!e.target.classList.contains('dl'))return;
+  const s=songs.find(x=>x.id===e.target.closest('.row').dataset.id);
+  if(s&&confirm(`"${s.name}" 곡을 삭제할까요?`)){await delSong(s);renderM();renderU()}
+};
+
+/* 관리자: 분석 */
+const SR=22050,F=220,FPS=SR/F;
+let file,url,mono,E,H,dur=0,segs=[];
+const ad=$('#ad');
+$('#f').onchange=e=>{
+  file=e.target.files[0];if(!file)return;mono=null;
+  if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);ad.src=url;$('#go').disabled=false;
+};
+const st=t=>$('#st').textContent=t;
+$('#go').onclick=async()=>{
+  $('#go').disabled=true;
+  try{
+    if(!mono){
+      st('디코딩 중… (1시간 파일은 1~2분 걸려요)');await wait();
+      const ctx=new AudioContext({sampleRate:SR});
+      const buf=await ctx.decodeAudioData(await file.arrayBuffer());
+      const n=buf.length,c=buf.numberOfChannels;mono=new Float32Array(n);
+      for(let ch=0;ch<c;ch++){const d=buf.getChannelData(ch);for(let i=0;i<n;i++)mono[i]+=d[i]/c}
+      ctx.close();dur=n/SR;
+      st('소리 특징 계산 중…');await wait();
+      const nf=Math.floor(n/F);E=new Float32Array(nf);H=new Float32Array(nf);
+      for(let i=0;i<nf;i++){let e=0,h=0,o=i*F,p=mono[o];
+        for(let j=1;j<F;j++){const x=mono[o+j];e+=x*x;const d=x-p;h+=d*d;p=x}
+        E[i]=e/F;H[i]=h/F}
+    }
+    find();
+  }catch(err){st('오류: '+err.message)}
+  $('#go').disabled=false;$('#go').textContent='설정 바꿔 다시 찾기';
+};
+function find(){
+  const thr=+$('#thr').value,drop=+$('#drop').value,hold=+$('#hold').value,preDb=+$('#pre').value,mgap=+$('#mgap').value,minL=+$('#minl').value;
+  const nf=E.length,h=new Float32Array(nf),O=new Float32Array(nf);
+  for(let i=0;i<nf;i++)h[i]=10*Math.log10(H[i]+1e-9);
+  for(let i=4;i<nf;i++)O[i]=h[i]-Math.max(h[i-1],h[i-2],h[i-3],h[i-4]);
+  const T=[];
+  for(let i=5;i<nf-1;i++)if(O[i]>thr&&O[i]>=O[i-1]&&O[i]>=O[i+1]){const t=i/FPS;if(!T.length||t-T[T.length-1]>0.15)T.push(t)}
+  const B=50,nb=Math.floor(nf/B),L=new Float32Array(nb);
+  for(let k=0;k<nb;k++){let s=0;for(let i=k*B;i<(k+1)*B;i++)s+=E[i];L[k]=10*Math.log10(s/B+1e-9)}
+  const floor=[...L].sort((a,b)=>a-b)[Math.floor(nb*0.2)];
+  const ins=[];let last=-1e9;
+  for(let a=0;a<T.length;a++){
+    const t1=T[a];if(t1<last+25)continue;
+    for(let b=a+1;b<T.length&&T[b]-t1<=1.2;b++){
+      const iv=T[b]-t1;if(iv<0.25)continue;const tol=Math.max(0.05,iv*0.12);
+      const has=t=>T.some(x=>Math.abs(x-t)<=tol);
+      if(has(t1+2*iv)&&has(t1+3*iv)){
+        const db=t1+4*iv,bi=Math.floor(db/0.5);let m=0,c=0;
+        for(let k=bi;k<bi+8&&k<nb;k++){m+=L[k];c++}
+        if(c&&m/c>floor+6&&(()=>{if(preDb<=0)return true;const bp=Math.floor(t1/0.5);let a=0,n=0;for(let k=bp-6;k<bp;k++)if(k>=0){a+=L[k];n++}return n<3||m/c-a/n>=preDb})()){ins.push({t:t1,db});last=t1;break}
+      }}}
+  segs=[];const raw=[];
+  ins.forEach((x,k)=>{
+    const s0=Math.max(0,x.t-0.3),limit=ins[k+1]?ins[k+1].t-0.3:dur;
+    const bi0=Math.floor(x.db/0.5),bEnd=Math.floor(limit/0.5);
+    let end=limit,run=0,rs=0;
+    for(let j=bi0+40;j<bEnd;j++){
+      const w=[...L.slice(bi0,j)].sort((a,b)=>a-b),base=w[Math.floor(w.length*0.8)];
+      if(L[j]<base-drop){if(!run)rs=j;run++;if(run*0.5>=hold){end=rs*0.5+0.5;break}}else run=0;
+    }
+    raw.push({s:s0,e:end});
+  });
+  const m2=[];
+  raw.forEach(r=>{const l=m2[m2.length-1];if(l&&r.s-l.e<=mgap)l.e=Math.max(l.e,r.e);else m2.push({...r})});
+  segs=m2.filter(r=>r.e-r.s>=minL).map((r,i)=>({s:r.s,e:r.e,name:'곡 '+(i+1)+'번'}));
+  st(segs.length?`곡 ${segs.length}개를 찾았어요. 듣고 확인한 뒤 업로드하세요.`:'곡을 찾지 못했어요. 감지 설정에서 카운트 감도를 낮춰 보세요.');
+  renderS();
+}
+
+/* 관리자: 구간 확인·미리듣기 */
+let act=null,stopAt=null;
+const adj=k=>[-10,-5,-1,1,5,10].map(d=>`<button class="gh sm" data-a="${k}" data-d="${d}">${d>0?'+':'−'}${Math.abs(d)}</button>`).join('');
+function renderS(){
+  $('#sg').innerHTML=segs.map((s,i)=>s.done?`<div class="card pad" data-i="${i}"><b>${esc(s.name)}</b> <span class="mut">· 올라감 ✓</span></div>`:`<div class="card pad" data-i="${i}">
+    <div class="rw"><input class="nm" value="${esc(s.name)}"></div>
+    <div class="rw"><input class="tm ts" value="${fmtd(s.s)}"> ~ <input class="tm te" value="${fmtd(s.e)}"><span class="mut">${Math.round(s.e-s.s)}초</span></div>
+    <input type="range" class="ps" min="0" max="1000" value="0">
+    <div class="rw"><span class="mut" style="width:100%">시작점 이동(초) — 누르면 바로 들려요</span>${adj('s')}</div>
+    <div class="rw"><span class="mut" style="width:100%">끝점 이동(초)</span>${adj('e')}</div>
+    <div class="rw"><button class="gh sm" data-a="pp">▶ 재생</button><button class="gh sm" data-a="hs">시작부</button><button class="gh sm" data-a="he">끝부</button><button class="gh sm" data-a="ss">여기부터 시작</button><button class="gh sm" data-a="se">여기까지 끝</button><button class="gh sm" data-a="sp">여기서 나누기</button>${i<segs.length-1?'<button class="gh sm" data-a="mg">다음 곡과 합치기</button>':''}<button class="gh sm" data-a="rm">제외</button></div>
+    <button class="btn" data-a="pub">🎵 이 곡 올리기</button></div>`).join('');
+}
+function playFrom(i,from,to){act=i;stopAt=to;ad.currentTime=from;ad.play()}
+ad.ontimeupdate=()=>{
+  if(act===null||!segs[act])return;const s=segs[act],t=ad.currentTime;
+  if(stopAt!==null&&t>=stopAt){ad.pause();return}
+  const p=document.querySelector(`#sg [data-i="${act}"] .ps`);if(p)p.value=Math.max(0,Math.min(1000,(t-s.s)/(s.e-s.s)*1000));
+};
+$('#sg').onchange=e=>{
+  const c=e.target.closest('.card');if(!c)return;const s=segs[+c.dataset.i],cl=e.target.classList;
+  if(cl.contains('nm'))s.name=e.target.value;
+  else if(cl.contains('ts')){s.s=Math.max(0,parse(e.target.value));renderS()}
+  else if(cl.contains('te')){s.e=Math.min(dur,parse(e.target.value));renderS()}
+};
+$('#sg').oninput=e=>{
+  if(!e.target.classList.contains('ps'))return;
+  const i=+e.target.closest('.card').dataset.i,s=segs[i];
+  playFrom(i,s.s+e.target.value/1000*(s.e-s.s),s.e);
+};
+$('#sg').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const i=+b.closest('.card').dataset.i,s=segs[i],a=b.dataset.a,d=+b.dataset.d;
+  if(a==='pp'){if(act===i&&!ad.paused)ad.pause();else{const p=b.closest('.card').querySelector('.ps').value;playFrom(i,s.s+p/1000*(s.e-s.s),s.e)}}
+  else if(a==='hs')playFrom(i,s.s,s.s+6);
+  else if(a==='he')playFrom(i,Math.max(s.s,s.e-6),s.e);
+  else if(a==='s'){s.s=Math.max(0,Math.min(s.e-5,s.s+d));renderS();playFrom(i,s.s,s.s+6)}
+  else if(a==='e'){s.e=Math.min(dur,Math.max(s.s+5,s.e+d));renderS();playFrom(i,Math.max(s.s,s.e-6),s.e)}
+  else if(a==='ss'&&act===i){s.s=ad.currentTime;renderS()}
+  else if(a==='se'&&act===i){s.e=ad.currentTime;renderS()}
+  else if(a==='sp'&&act===i){const c=ad.currentTime;if(c>s.s+5&&c<s.e-5){segs.splice(i+1,0,{s:c,e:s.e,name:s.name+' (2)'});s.e=c;renderS()}}
+  else if(a==='mg'){s.e=segs[i+1].e;segs.splice(i+1,1);renderS()}
+  else if(a==='rm'){segs.splice(i,1);act=null;renderS()}
+  else if(a==='pub')publish(s,b);
+};
+
+/* 곡 하나를 mp3로 변환해 업로드 → 이용자에게 노출 */
+async function enc(s){
+  const a=Math.floor(s.s*SR),b=Math.min(mono.length,Math.floor(s.e*SR));
+  let pk=0;for(let i=a;i<b;i+=3){const v=Math.abs(mono[i]);if(v>pk)pk=v}
+  const g=Math.min(3,0.9/(pk||1)),m=new lamejs.Mp3Encoder(1,SR,96),out=[];
+  for(let i=a,c=0;i<b;i+=1152,c++){
+    const n=Math.min(1152,b-i),x=new Int16Array(n);
+    for(let j=0;j<n;j++){const v=Math.max(-1,Math.min(1,mono[i+j]*g));x[j]=v<0?v*32768:v*32767}
+    const d=m.encodeBuffer(x);if(d.length)out.push(d);
+    if(c%300===0)await wait();
+  }
+  out.push(m.flush());return new Blob(out,{type:'audio/mpeg'});
+}
+const b64=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(b)});
+const upl=(r,blob,cb)=>new Promise((res,rej)=>{
+  const t=uploadBytesResumable(r,blob,{contentType:'audio/mpeg'});
+  t.on('state_changed',x=>cb(Math.round(x.bytesTransferred/x.totalBytes*100)),rej,res)});
+async function publish(s,btn){
+  const date=$('#dt').value;if(!date)return alert('합주 날짜를 선택해 주세요');
+  btn.disabled=true;
+  try{
+    btn.textContent='mp3 변환 중…';const blob=await enc(s);await ensureSpace(blob.size);
+    const data={date,name:s.name,dur:s.e-s.s,size:blob.size,visible:true,stars:0,created:Date.now()};let id;
+    if(STORE==='fs'){
+      const sr=doc(collection(db,'songs')),n=Math.ceil(blob.size/PART);
+      for(let k=0;k<n;k++){
+        btn.textContent=`업로드 중 ${k+1}/${n}`;
+        await setDoc(doc(db,'songs',sr.id,'parts',String(k).padStart(3,'0')),{i:k,d:await b64(blob.slice(k*PART,(k+1)*PART))});
+      }
+      Object.assign(data,{store:'fs',parts:n});await setDoc(sr,data);id=sr.id;
+    }else{
+      const path=`songs/${date}/${Date.now()}.mp3`,r=ref(sto,path);
+      await upl(r,blob,p=>btn.textContent='업로드 중 '+p+'%');
+      Object.assign(data,{url:await getDownloadURL(r),path});id=(await addDoc(collection(db,'songs'),data)).id;
+    }
+    songs.push({id,...data});
+    s.done=true;st(`"${s.name}" 올리기 완료`);renderS();renderU();renderM();
+  }catch(err){
+    btn.disabled=false;btn.textContent='🎵 이 곡 올리기';
+    st('업로드 실패: '+(err.code||'')+' '+err.message+' — Firestore 규칙/네트워크를 확인해 주세요');
+  }
+}
+
+load();
+</script></body></html>
