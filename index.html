@@ -46,6 +46,7 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
 #ph{position:absolute;top:0;bottom:0;width:2px;background:#5b3fd6;pointer-events:none;z-index:2;box-shadow:0 0 6px rgba(91,63,214,.6)}
 #tw{position:relative;overflow-x:auto;border-radius:20px;background:#fff7fc;border:1.5px solid #f3e1f5;-webkit-overflow-scrolling:touch}
 #tl{position:relative;cursor:pointer}
+.dd{border-top:1.5px dashed var(--ln)}.dd:first-child{border-top:0}.dh{padding:13px 0;cursor:pointer;list-style:none;font-size:16px}.dh::-webkit-details-marker{display:none}.dh::after{content:"▾";float:right;color:#b69cff}.dd[open] .dh::after{content:"▴"}
 </style></head><body>
 <h1>🎸 Castle 화요일밴드 🥁</h1>
 <div class="sub">우리 합주 다시 듣기 ♪</div>
@@ -208,9 +209,14 @@ $('#pp').onclick=()=>au.paused?au.play():au.pause();
 $('#bar').querySelector('.chips').onclick=e=>{const b=e.target.closest('button');if(b&&cur)au.currentTime=+b.dataset.p*cur.dur};
 
 /* 관리자: 올라간 곡 관리 */
+const openD=new Set();
 function renderM(){
-  $('#ml').innerHTML=songs.length?[...songs].sort((a,b)=>(b.created||0)-(a.created||0)).map(s=>`<div class="row" data-id="${s.id}"><div class="gr"><input class="nm" value="${esc(s.name)}"><div class="mut">${s.date} · ${fmt(s.dur)} · ★${s.stars||0}</div></div><label class="mut"><input type="checkbox" class="vz" ${s.visible!==false?'checked':''}> 노출</label><button class="gh sm dl">삭제</button></div>`).join(''):'<div class="pad mut">아직 곡이 없어요</div>';
+  if(!songs.length){$('#ml').innerHTML='<div class="pad mut">아직 곡이 없어요</div>';return}
+  const g={};songs.forEach(s=>(g[s.date]=g[s.date]||[]).push(s));
+  $('#ml').innerHTML=Object.keys(g).sort().reverse().map(d=>`<details class="dd" data-d="${d}" ${openD.has(d)?'open':''}><summary class="dh">📅 ${d.replace(/-/g,'.')} <span class="mut">· ${g[d].length}곡</span></summary>`+
+    g[d].sort((a,b)=>(a.created||0)-(b.created||0)).map(s=>`<div class="row" data-id="${s.id}"><div class="gr"><input class="nm" value="${esc(s.name)}"><div class="mut">${fmt(s.dur)} · ★${s.stars||0}</div></div><label class="mut"><input type="checkbox" class="vz" ${s.visible!==false?'checked':''}> 노출</label><button class="gh sm dl">삭제</button></div>`).join('')+'</details>').join('');
 }
+$('#ml').addEventListener('toggle',e=>{const d=e.target.dataset&&e.target.dataset.d;if(d)e.target.open?openD.add(d):openD.delete(d)},true);
 $('#ml').onchange=async e=>{
   const r=e.target.closest('.row'),s=songs.find(x=>x.id===r.dataset.id);if(!s)return;
   if(e.target.classList.contains('nm')){s.name=e.target.value;await updateDoc(doc(db,'songs',s.id),{name:s.name})}
