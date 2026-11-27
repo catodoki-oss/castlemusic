@@ -6,7 +6,7 @@
 <style>
 :root{--fg:#4f3f66;--mut:#a095b8;--ac:#ff8fb8;--ln:#f1e4f7;--st:#ffb02e}
 *{box-sizing:border-box}html{color-scheme:light}
-body{margin:0;min-height:100vh;color:var(--fg);background:linear-gradient(160deg,#ffe3f0 0%,#ebe3ff 45%,#d8f0ff 100%) fixed;font:16px/1.45 "Jua",-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px calc(170px + env(safe-area-inset-bottom));max-width:640px;margin:auto}
+body{margin:0;min-height:100vh;color:var(--fg);background:linear-gradient(160deg,#ffe3f0 0%,#ebe3ff 45%,#d8f0ff 100%) fixed;font:16px/1.45 "Jua",-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px calc(210px + env(safe-area-inset-bottom));max-width:640px;margin:auto}
 h1{font-size:32px;text-align:center;margin:8px 0 4px;background:linear-gradient(90deg,#ff7eb3,#a78bfa,#5cc2ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{text-align:center;color:var(--mut);margin:0 0 16px;font-size:14px}
 .seg{display:flex;background:rgba(255,255,255,.65);border-radius:999px;padding:4px;margin-bottom:16px;box-shadow:0 4px 14px rgba(167,139,250,.2)}
@@ -47,6 +47,13 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
 #tw{position:relative;overflow-x:auto;border-radius:20px;background:#fff7fc;border:1.5px solid #f3e1f5;-webkit-overflow-scrolling:touch}
 #tl{position:relative;cursor:pointer}
 .dd{border-top:1.5px dashed var(--ln)}.dd:first-child{border-top:0}.dh{padding:13px 0;cursor:pointer;list-style:none;font-size:16px}.dh::-webkit-details-marker{display:none}.dh::after{content:"▾";float:right;color:#b69cff}.dd[open] .dh::after{content:"▴"}
+#bar{max-height:62vh;overflow-y:auto}
+.gh.on{background:linear-gradient(90deg,#ff9ec4,#b69cff);color:#fff}
+.gems{display:flex;flex-wrap:wrap;gap:4px;padding:2px 0 8px}.gems span{display:inline-flex}
+.pop{animation:pop .7s}@keyframes pop{0%{transform:scale(0) rotate(-40deg)}70%{transform:scale(1.5) rotate(8deg)}100%{transform:scale(1)}}
+#cd{position:fixed;inset:0;margin:auto;width:170px;height:170px;border-radius:50%;background:linear-gradient(135deg,#ff9ec4,#b69cff);color:#fff;font-size:96px;display:flex;align-items:center;justify-content:center;z-index:60;box-shadow:0 10px 40px rgba(167,139,250,.65);animation:beat 1s infinite}
+@keyframes beat{0%{transform:scale(.85)}50%{transform:scale(1.05)}100%{transform:scale(.85)}}
+#toast{position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#fff;color:var(--fg);padding:10px 18px;border-radius:999px;box-shadow:0 6px 22px rgba(167,139,250,.4);z-index:70;max-width:92vw;text-align:center}
 </style></head><body>
 <h1>🎸 Castle 화요일밴드 🥁</h1>
 <div class="sub">우리 합주 다시 듣기 ♪</div>
@@ -54,6 +61,7 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
 
 <section id="U">
   <div class="card cal"><div class="ch"><button id="pm">‹</button><span id="mt"></span><button id="nx">›</button></div><div class="cg" id="cg"></div></div>
+  <div class="card pad" id="gm"></div>
   <div class="rw"><b id="dl" style="margin-left:4px"></b><button class="gh sm" id="stb" style="margin-left:auto">⭐ 보관곡 모음</button></div>
   <div class="card" id="ul"></div>
 </section>
@@ -94,7 +102,20 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
   <div class="top"><button class="pp" id="pp">▶</button><b id="bt"></b><span class="mut" id="tm"></span></div>
   <input type="range" id="sl" min="0" max="1000" value="0" style="margin:8px 0 4px">
   <div class="chips"><button class="gh sm" data-p="0">처음</button><button class="gh sm" data-p=".25">1/4</button><button class="gh sm" data-p=".5">중간</button><button class="gh sm" data-p=".75">3/4</button><button class="gh sm" data-p=".92">끝부분</button></div>
+  <div class="chips" id="sk" style="margin-top:8px;justify-content:center;gap:12px"><button class="gh" data-d="-10">⏪ 10초</button><button class="gh" data-d="10">10초 ⏩</button></div>
+  <details id="tools"><summary>🎯 연습 도구 (속도 · 책갈피 · 반복)</summary>
+    <div class="mut">재생 속도</div>
+    <div class="chips" id="spd" style="gap:6px;margin:4px 0 10px"><button class="gh sm" data-sp="0.7">0.7×</button><button class="gh sm" data-sp="0.8">0.8×</button><button class="gh sm" data-sp="0.9">0.9×</button><button class="gh sm" data-sp="1">1×</button><button class="gh sm" data-sp="1.1">1.1×</button></div>
+    <div class="mut">반복 횟수 (책갈피를 누르면 그 구간을 이 횟수만큼 반복)</div>
+    <div class="rw"><button class="gh sm" id="rmn">−</button><input type="number" id="rn" value="1" min="1" max="99" style="width:64px;text-align:center"><button class="gh sm" id="rpl">+</button>
+      <span class="chips" id="rq" style="gap:5px"><button class="gh sm" data-n="3">3</button><button class="gh sm" data-n="5">5</button><button class="gh sm" data-n="10">10</button><button class="gh sm" data-n="20">20</button><button class="gh sm" data-n="30">30</button></span></div>
+    <div class="rw"><button class="gh sm" id="rall">🔁 곡 처음부터</button><button class="gh sm" id="rstop" hidden>⏹ 반복 중지</button><span class="mut" id="rp"></span></div>
+    <div class="rw"><button class="gh sm" id="bma">🔖 지금 위치 책갈피</button></div>
+    <div class="rw" id="bml"></div>
+    <div class="mut">책갈피 구간은 다음 책갈피(없으면 곡 끝)까지예요. 횟수가 1이면 그 지점부터 이어서 재생해요. 반복 10·20·30회를 채우면 💎 초록·노랑·빨강 다이아!</div>
+  </details>
 </div>
+<div id="cd" hidden></div><div id="toast" hidden></div>
 <audio id="au"></audio><audio id="ad"></audio>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
@@ -189,7 +210,7 @@ $('#ul').onclick=async e=>{
 const au=$('#au');
 const blobs={};
 async function play(s){
-  cur=s;$('#bt').textContent=s.name;$('#bar').hidden=false;
+  cur=s;$('#bt').textContent=s.name;$('#bar').hidden=false;cancelRep();renderBm();
   if(s.store==='fs'){
     if(!blobs[s.id]){
       $('#tm').textContent='불러오는 중…';
@@ -200,13 +221,87 @@ async function play(s){
     }
     au.src=blobs[s.id];
   }else au.src=s.url;
-  au.play();
+  au.defaultPlaybackRate=spd;au.playbackRate=spd;au.play();
 }
 au.ontimeupdate=()=>{if(!cur)return;$('#sl').value=au.currentTime/cur.dur*1000;$('#tm').textContent=fmt(au.currentTime)+' / '+fmt(cur.dur)};
 au.onplay=()=>$('#pp').textContent='⏸';au.onpause=()=>$('#pp').textContent='▶';
 $('#sl').oninput=e=>{if(cur)au.currentTime=e.target.value/1000*cur.dur};
 $('#pp').onclick=()=>au.paused?au.play():au.pause();
 $('#bar').querySelector('.chips').onclick=e=>{const b=e.target.closest('button');if(b&&cur)au.currentTime=+b.dataset.p*cur.dur};
+
+/* 연습 도구: 속도 · 책갈피 · 반복 · 다이아 (기록은 각자 폰에 저장) */
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const LSset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let spd=1,rep=null,tok=0,lastPass=0,bms=LS('bm_tue',{}),gems=LS('gems_tue',[]);
+const GC={g:['#5be3a4','#1faa6e','초록'],y:['#ffe06b','#f0b400','노랑'],r:['#ff7a93','#e0204a','빨강']};
+const gem=c=>`<svg viewBox="0 0 24 24" width="30" height="30"><polygon points="12,2 21,9 12,22 3,9" fill="${GC[c][0]}" stroke="${GC[c][1]}" stroke-width="1.5" stroke-linejoin="round"/><polygon points="12,2 16,9 12,22 8,9" fill="#fff" opacity=".3"/></svg>`;
+function renderGems(isNew){
+  const n={g:0,y:0,r:0};gems.forEach(x=>n[x.c]++);
+  $('#gm').innerHTML=`<div class="rw" style="justify-content:space-between"><b>💎 내가 모은 다이아</b><span class="mut">초록 ${n.g} · 노랑 ${n.y} · 빨강 ${n.r}</span></div>`+
+    (gems.length?`<div class="gems">${gems.map((x,i)=>`<span class="${isNew&&i===gems.length-1?'pop':''}" title="${esc(x.n||'')}">${gem(x.c)}</span>`).join('')}</div>`
+    :'<div class="mut" style="margin-bottom:8px">곡 책갈피를 10·20·30번 반복 재생하면 초록·노랑·빨강 다이아를 받아요!</div>');
+}
+function toast(t,ms){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>e.hidden=true,ms||2600)}
+function award(c){gems.push({c,t:Date.now(),n:cur?cur.name:''});LSset('gems_tue',gems);renderGems(true);toast(`🎉 ${GC[c][2]} 다이아 획득! 💎`,3800)}
+
+/* 속도 */
+function markSpd(){document.querySelectorAll('#spd button').forEach(b=>b.classList.toggle('on',+b.dataset.sp===spd))}
+$('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;spd=+b.dataset.sp;au.defaultPlaybackRate=spd;au.playbackRate=spd;markSpd()};
+/* ±10초 */
+$('#sk').onclick=e=>{const b=e.target.closest('button');if(!b||!cur)return;au.currentTime=Math.max(0,Math.min(cur.dur,au.currentTime+(+b.dataset.d)))};
+/* 반복 횟수 입력 */
+const setN=v=>$('#rn').value=Math.max(1,Math.min(99,v||1));
+$('#rmn').onclick=()=>setN(+$('#rn').value-1);$('#rpl').onclick=()=>setN(+$('#rn').value+1);
+$('#rq').onclick=e=>{const b=e.target.closest('button');if(b)setN(+b.dataset.n)};
+
+/* 책갈피 */
+function renderBm(){
+  const l=cur?(bms[cur.id]||[]).slice().sort((a,b)=>a-b):[];
+  $('#bml').innerHTML=l.length?l.map(t=>`<span style="white-space:nowrap"><button class="gh sm" data-b="${t}">🔖 ${fmt(t)}</button><button class="gh sm" data-bx="${t}">✕</button></span>`).join(' '):'<span class="mut">아직 책갈피가 없어요</span>';
+}
+$('#bma').onclick=()=>{
+  if(!cur)return;const t=Math.round(au.currentTime*10)/10,l=bms[cur.id]=bms[cur.id]||[];
+  if(!l.includes(t))l.push(t);LSset('bm_tue',bms);renderBm();toast('🔖 '+fmt(t)+' 책갈피 추가');
+};
+$('#bml').onclick=e=>{
+  const b=e.target.closest('button');if(!b||!cur)return;
+  if(b.dataset.bx!==undefined){bms[cur.id]=(bms[cur.id]||[]).filter(t=>t!==+b.dataset.bx);LSset('bm_tue',bms);renderBm()}
+  else if(b.dataset.b!==undefined){
+    const f=+b.dataset.b,nx=(bms[cur.id]||[]).filter(t=>t>f+1).sort((x,y)=>x-y)[0];
+    startAt(f,nx||cur.dur);
+  }
+};
+$('#rall').onclick=()=>{if(cur)startAt(0,cur.dur)};
+
+/* 카운트다운 → 재생 → 구간 반복 */
+async function startAt(from,to){
+  const n=Math.max(1,Math.min(99,+$('#rn').value||1)),my=++tok;
+  rep=null;updRp();au.pause();
+  for(const c of [3,2,1]){
+    $('#cd').textContent=c;$('#cd').hidden=false;
+    await new Promise(r=>setTimeout(r,1000));
+    if(my!==tok){$('#cd').hidden=true;return}
+  }
+  $('#cd').hidden=true;au.currentTime=from;au.play();
+  if(n>1){rep={from,to:Math.min(to,isFinite(au.duration)?au.duration:to),n,k:0};updRp();repLoop()}
+}
+function cancelRep(){tok++;rep=null;$('#cd').hidden=true;updRp()}
+function updRp(){$('#rp').textContent=rep?`🔁 ${rep.k}/${rep.n}회 (${fmt(rep.from)}~${fmt(rep.to)})`:'';$('#rstop').hidden=!rep}
+$('#rstop').onclick=()=>{cancelRep();au.pause()};
+function pass(){
+  if(!rep||Date.now()-lastPass<400)return;lastPass=Date.now();
+  rep.k++;
+  if(rep.k===10)award('g');else if(rep.k===20)award('y');else if(rep.k===30)award('r');
+  if(rep.k>=rep.n){au.pause();if(![10,20,30].includes(rep.k))toast(`✅ ${rep.n}번 반복 완료!`);rep=null;updRp();return}
+  updRp();au.currentTime=rep.from;if(au.paused)au.play();
+}
+function repLoop(){
+  if(!rep)return;
+  if((au.currentTime>=rep.to-0.08&&!au.paused)||au.ended)pass();
+  requestAnimationFrame(repLoop);
+}
+au.onended=()=>{if(rep)pass()};
+markSpd();
 
 /* 관리자: 올라간 곡 관리 */
 const openD=new Set();
@@ -450,5 +545,5 @@ async function publish(s,btn){
   }
 }
 
-load();
+renderGems();load();
 </script></body></html>
