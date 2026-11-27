@@ -66,10 +66,18 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
 <div class="seg" id="tabs"><button class="on" data-t="U">🎧 듣기</button><button data-t="A">🎤 올리기</button></div>
 
 <section id="U">
+  <div class="seg" id="sub"><button class="on" data-v="L">🎸 합주 듣기</button><button data-v="R">🎼 음원 연습</button></div>
+  <div id="vL">
   <div class="card cal"><div class="ch"><button id="pm">‹</button><span id="mt"></span><button id="nx">›</button></div><div class="cg" id="cg"></div></div>
   <div class="card pad" id="gm"></div>
   <div class="rw"><b id="dl" style="margin-left:4px"></b><button class="gh sm" id="stb" style="margin-left:auto">⭐ 보관곡 모음</button></div>
   <div class="card" id="ul"></div>
+  </div>
+  <div id="vR" hidden>
+    <input type="text" id="rsq" placeholder="🔍 음원 검색" style="width:100%;margin-bottom:10px">
+    <div class="card" id="rl"></div>
+    <div class="mut" style="margin:0 6px">음원을 누르면 아래 재생창에서 ±10초 · 배속 · 구간 책갈피 · 반복 연습을 모두 쓸 수 있어요. 다이아는 '🎸 합주 듣기' 달력 아래에 쌓여요 💎</div>
+  </div>
 </section>
 
 <section id="A" hidden>
@@ -101,6 +109,14 @@ summary{color:#8b6fe0;font-size:14px;margin:8px 0}
     <div id="sg"></div>
     <h3 style="margin:18px 4px 8px">2. 올라간 곡 관리</h3>
     <div class="card" id="ml"></div>
+    <h3 style="margin:18px 4px 8px">3. 🎼 연습용 음원 올리기 (mp3)</h3>
+    <div class="card pad">
+      <div class="mut" style="margin-bottom:8px">원곡 mp3를 올리면 '듣기 → 🎼 음원 연습'에 목록으로 떠요. 여러 개를 한 번에 올릴 수 있고, 파일당 20MB 이하예요.</div>
+      <div class="rw"><input type="file" id="rf" accept="audio/*,.mp3,.m4a" multiple></div>
+      <button class="btn" id="rup">🎼 음원 올리기</button>
+      <div class="mut" id="st2"></div>
+    </div>
+    <div class="card" id="rml"></div>
   </div>
 </section>
 
@@ -138,6 +154,7 @@ sto.maxUploadRetryTime=30000;
 /* ★ 설정 */
 const STORE='fs';              // 'fs' = Firestore에 저장(무료·Storage 불필요), 'storage' = Firebase Storage
 const CAP_MB=800;              // 이 용량을 넘으면 별표 없는 오래된 곡부터 자동 삭제 (Storage 모드면 3000 정도)
+const REF_CAP_MB=250;          // 연습용 음원 전체 보관 한도
 const PART=600000;             // Firestore 저장 시 조각 크기
 
 const $=s=>document.querySelector(s);
@@ -146,7 +163,7 @@ const fmt=t=>{t=Math.max(0,t||0);return Math.floor(t/60)+':'+String(Math.floor(t
 const fmtd=t=>{const m=Math.floor(t/60);return m+':'+(t-m*60).toFixed(1).padStart(4,'0')};
 const parse=s=>{const p=s.split(':');return p.length>1?(+p[0])*60+(+p[1]):+s};
 const wait=()=>new Promise(r=>setTimeout(r,15));
-let songs=[],cur=null,stars=new Set();
+let songs=[],refs=[],refErr='',cur=null,stars=new Set();
 try{stars=new Set(JSON.parse(localStorage.getItem('stars_tue')||'[]'))}catch(e){}
 
 /* 탭 */
@@ -160,7 +177,9 @@ $('#dt').value=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOStri
 async function load(){
   try{const q=await getDocs(collection(db,'songs'));songs=q.docs.map(d=>({id:d.id,...d.data()}))}
   catch(e){$('#ul').innerHTML='<div class="pad mut">불러오기 실패: '+esc(e.message)+'</div>';return}
-  renderU();renderM();
+  try{const q2=await getDocs(collection(db,'refs'));refs=q2.docs.map(d=>({id:d.id,col:'refs',...d.data()}));refErr=''}
+  catch(e){refs=[];refErr='음원 목록을 불러오지 못했어요: Firestore 규칙에 refs 허용이 필요해요'}
+  renderU();renderM();renderR();renderRM();
 }
 async function delSong(s){
   if(s.store==='fs'){const q=await getDocs(collection(db,'songs',s.id,'parts'));for(const d of q.docs)await deleteDoc(d.ref)}
@@ -168,7 +187,7 @@ async function delSong(s){
   await deleteDoc(doc(db,'songs',s.id));songs=songs.filter(x=>x.id!==s.id);
 }
 async function ensureSpace(need){
-  const cap=CAP_MB*1048576;let tot=songs.reduce((a,s)=>a+(s.size||0),0);
+  const cap=CAP_MB*1048576;let tot=songs.reduce((a,s)=>a+(s.size||0),0)+refs.reduce((a,s)=>a+(s.size||0),0);
   const old=songs.filter(s=>!(s.stars>0)).sort((a,b)=>(a.created||0)-(b.created||0));
   while(tot+need>cap&&old.length){const s=old.shift();tot-=s.size||0;await delSong(s)}
   if(tot+need>cap)throw new Error('용량 부족: 별표로 보관된 곡이 너무 많아요');
@@ -219,14 +238,14 @@ const blobs={};
 async function play(s){
   cur=s;$('#bt').textContent=s.name;$('#bar').hidden=false;cancelRep();renderBm();track(s,'plays');
   if(s.store==='fs'){
-    if(!blobs[s.id]){
+    const bk=(s.col||'songs')+s.id;if(!blobs[bk]){
       $('#tm').textContent='불러오는 중…';
-      try{const q=await getDocs(collection(db,'songs',s.id,'parts'));
+      try{const q=await getDocs(collection(db,s.col||'songs',s.id,'parts'));
         const ps=q.docs.map(d=>d.data()).sort((a,b)=>a.i-b.i).map(p=>Uint8Array.from(atob(p.d),c=>c.charCodeAt(0)));
-        blobs[s.id]=URL.createObjectURL(new Blob(ps,{type:'audio/mpeg'}))}
+        blobs[bk]=URL.createObjectURL(new Blob(ps,{type:s.mime||'audio/mpeg'}))}
       catch(e){$('#tm').textContent='불러오기 실패';return}
     }
-    au.src=blobs[s.id];
+    au.src=blobs[bk];
   }else au.src=s.url;
   au.defaultPlaybackRate=spd;au.playbackRate=spd;au.play();
 }
@@ -319,6 +338,7 @@ function repLoop(){
   requestAnimationFrame(repLoop);
 }
 au.onended=()=>{if(rep)pass()};
+au.onloadedmetadata=()=>{if(cur&&!cur.dur&&isFinite(au.duration))cur.dur=au.duration};
 markSpd();
 
 /* 월간 정리 팝업 + 이미지 공유 */
@@ -387,6 +407,60 @@ function maybeRecap(){
   if(last&&!seen.includes(cm)&&has(cm))m=cm;else if(!seen.includes(pm)&&has(pm))m=pm;
   if(m){seen.push(m);LSset('recap_seen',seen);openRecap(m)}
 }
+
+/* 🎼 음원 연습: 목록 + mp3 업로드/관리 */
+$('#sub').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#sub button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#vL').hidden=b.dataset.v!=='L';$('#vR').hidden=b.dataset.v!=='R'};
+function renderR(){
+  if(refErr){$('#rl').innerHTML=`<div class="pad mut">${esc(refErr)}</div>`;return}
+  const q=($('#rsq').value||'').trim().toLowerCase();
+  const l=[...refs].filter(x=>!q||x.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  $('#rl').innerHTML=l.length?l.map(x=>`<div class="row" data-id="${x.id}"><button class="pl">▶</button><div class="gr"><b>${esc(x.name)}</b><div class="mut">${fmt(x.dur)}</div></div></div>`).join(''):`<div class="pad mut">${refs.length?'검색 결과가 없어요':'아직 올라온 음원이 없어요. 🎤 올리기 탭에서 mp3를 올려 주세요'}</div>`;
+}
+$('#rsq').oninput=renderR;
+$('#rl').onclick=e=>{const r=e.target.closest('.row');if(!r)return;const x=refs.find(v=>v.id===r.dataset.id);if(x)play(x)};
+function renderRM(){
+  $('#rml').innerHTML=refs.length?[...refs].sort((a,b)=>(b.created||0)-(a.created||0)).map(x=>`<div class="row" data-id="${x.id}"><div class="gr"><input class="nm" value="${esc(x.name)}"><div class="mut">${fmt(x.dur)} · ${(x.size/1048576).toFixed(1)}MB</div></div><button class="gh sm dl">삭제</button></div>`).join(''):'<div class="pad mut">올라간 음원이 없어요</div>';
+}
+$('#rml').onchange=async e=>{
+  if(!e.target.classList.contains('nm'))return;
+  const x=refs.find(v=>v.id===e.target.closest('.row').dataset.id);if(!x)return;
+  x.name=e.target.value;await updateDoc(doc(db,'refs',x.id),{name:x.name});renderR();
+};
+$('#rml').onclick=async e=>{
+  if(!e.target.classList.contains('dl'))return;
+  const x=refs.find(v=>v.id===e.target.closest('.row').dataset.id);
+  if(x&&confirm(`"${x.name}" 음원을 삭제할까요?`)){
+    const q=await getDocs(collection(db,'refs',x.id,'parts'));for(const d of q.docs)await deleteDoc(d.ref);
+    await deleteDoc(doc(db,'refs',x.id));refs=refs.filter(v=>v.id!==x.id);renderR();renderRM();
+  }
+};
+const st2=t=>$('#st2').textContent=t;
+const durOf=f=>new Promise(res=>{const a=new Audio(),u=URL.createObjectURL(f);a.preload='metadata';
+  a.onloadedmetadata=()=>{res(isFinite(a.duration)?a.duration:0);URL.revokeObjectURL(u)};
+  a.onerror=()=>{res(0);URL.revokeObjectURL(u)};a.src=u});
+$('#rup').onclick=async()=>{
+  const fl=[...$('#rf').files];if(!fl.length)return alert('올릴 mp3 파일을 선택해 주세요');
+  $('#rup').disabled=true;
+  try{
+    for(let i=0;i<fl.length;i++){
+      const f=fl[i];
+      if(f.size>20*1048576){st2(`${f.name}: 20MB 이하 파일만 올릴 수 있어요`);continue}
+      if(refs.reduce((a,x)=>a+(x.size||0),0)+f.size>REF_CAP_MB*1048576)throw new Error('음원 보관 용량이 가득 찼어요. 안 쓰는 음원을 삭제해 주세요');
+      await ensureSpace(f.size);
+      const dur=await durOf(f),sr=doc(collection(db,'refs')),n=Math.ceil(f.size/PART);
+      for(let k=0;k<n;k++){
+        st2(`(${i+1}/${fl.length}) ${f.name} 업로드 중 ${k+1}/${n}`);
+        await setDoc(doc(db,'refs',sr.id,'parts',String(k).padStart(3,'0')),{i:k,d:await b64(f.slice(k*PART,(k+1)*PART))});
+      }
+      const data={name:f.name.replace(/\.[^.]+$/,''),dur,size:f.size,mime:f.type||'audio/mpeg',store:'fs',parts:n,created:Date.now()};
+      await setDoc(sr,data);refs.push({id:sr.id,col:'refs',...data});refErr='';renderR();renderRM();
+    }
+    st2('음원 업로드 완료! 듣기 → 🎼 음원 연습에서 확인해 보세요.');$('#rf').value='';
+  }catch(err){st2('오류: '+err.message)}
+  $('#rup').disabled=false;
+};
 
 /* 관리자: 올라간 곡 관리 */
 const openD=new Set();
